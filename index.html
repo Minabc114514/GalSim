@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>借款成功</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+                 "Microsoft YaHei", Arial, sans-serif;
+    background: #e9edf2;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .phone {
+    position: relative;
+    width: 375px;
+    height: 780px;
+    background: #ffffff;
+    border-radius: 38px;
+    box-shadow: 0 24px 60px rgba(23, 43, 77, .18),
+                0 2px 8px rgba(23, 43, 77, .06);
+    overflow: hidden;
+  }
+
+  .page {
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: transform .4s cubic-bezier(.4, 0, .2, 1), opacity .4s;
+  }
+
+  .page-form {
+    transform: translateX(0);
+    opacity: 1;
+    z-index: 1;
+  }
+  .page-form.hidden {
+    transform: translateX(-25%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .page-result {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 2;
+  }
+  .page-result.active {
+    transform: translateX(0);
+  }
+
+  .page-more {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 3;
+  }
+  .page-more.active {
+    transform: translateX(0);
+  }
+
+  .page-view {
+    transform: translateX(100%);
+    opacity: 1;
+    z-index: 4;
+  }
+  .page-view.active {
+    transform: translateX(0);
+  }
+
+  .form-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 26px 30px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .form-content::-webkit-scrollbar { display: none; }
+
+  .form-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .form-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #111827;
+    letter-spacing: .5px;
+  }
+
+  .btn-donate {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    padding: 0 12px;
+    border: 1px solid #fca5a5;
+    border-radius: 15px;
+    background: #fef2f2;
+    color: #ef4444;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    letter-spacing: .5px;
+    cursor: pointer;
+    transition: background .18s ease, transform .12s ease;
+    flex-shrink: 0;
+    text-decoration: none;
+  }
+  .btn-donate:active {
+    background: #fee2e2;
+    transform: scale(.96);
+  }
+  .btn-donate svg { display: block; flex-shrink: 0; }
+
+  .form-subtitle {
+    font-size: 13px;
+    color: #9ca3af;
+    margin-bottom: 22px;
+  }
+
+  .field { margin-bottom: 20px; }
+
+  .field-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 10px;
+    letter-spacing: .3px;
+  }
+
+  .picker-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .picker-wrap {
+    position: relative;
+    flex: 1;
+    height: 160px;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #f7f8fa;
+  }
+  .picker-wrap::before {
+    content: '';
+    position: absolute;
+    top: 60px;
+    left: 8px;
+    right: 8px;
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(37, 99, 235, .08);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .picker-col {
+    height: 160px;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    position: relative;
+    z-index: 1;
+  }
+  .picker-col::-webkit-scrollbar { display: none; }
+
+  .picker-item {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    color: #b0b7c3;
+    transition: color .2s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .picker-item.active {
+    color: #111827;
+    font-weight: 600;
+  }
+
+  .picker-sep {
+    font-size: 14px;
+    color: #9ca3af;
+    padding: 0 2px;
+    flex-shrink: 0;
+  }
+
+  .input-wrap {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    background: #f7f8fa;
+    border-radius: 12px;
+    padding: 0 16px;
+    transition: background .2s, box-shadow .2s;
+  }
+  .input-wrap:focus-within {
+    background: #ffffff;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, .25);
+  }
+  .input-prefix {
+    font-size: 17px;
+    font-weight: 600;
+    color: #374151;
+    margin-right: 6px;
+  }
+  .input-wrap input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 17px;
+    color: #111827;
+    letter-spacing: .3px;
+    width: 100%;
+    min-width: 0;
+  }
+  .input-wrap input::placeholder {
+    color: #c4c9d2;
+    font-size: 15px;
+  }
+  .input-suffix {
+    font-size: 15px;
+    color: #9ca3af;
+    margin-left: 6px;
+    flex-shrink: 0;
+  }
+
+  .more-link {
+    margin-top: 12px;
+    font-size: 13px;
+    color: #2563eb;
+    letter-spacing: .3px;
+    cursor: pointer;
+    display: inline-block;
+    user-select: none;
+  }
+
+  .btn-row {
+    margin-top: 8px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn-confirm {
+    flex: 1;
+    height: 50px;
+    border: none;
+    outline: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .18s ease, transform .12s ease;
+  }
+  .btn-confirm:active {
+    background: #1d4ed8;
+    transform: scale(.985);
+  }
+
+  .btn-save {
+    flex: 1;
+    height: 50px;
+    border: none;
+    outline: none;
+    border-radius: 12px;
+    background: #10b981;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background .18s ease, transform .12s ease;
+  }
+  .btn-save:active {
+    background: #059669;
+    transform: scale(.985);
+  }
+  .btn-save svg { display: block; flex-shrink: 0; }
+
+  .more-footer {
+    flex-shrink: 0;
+    padding: 0 26px 26px;
+    background: #ffffff;
+  }
+  .more-footer .btn-confirm {
+    width: 100%;
+  }
+
+  .view-list {
+    margin-top: 6px;
+    border-top: 1px solid #f0f2f5;
+  }
+  .view-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid #f0f2f5;
+  }
+  .view-row .vk {
+    font-size: 14px;
+    color: #6b7280;
+    flex-shrink: 0;
+  }
+  .view-row .vv {
+    font-size: 14px;
+    color: #1f2937;
+    font-weight: 500;
+    text-align: right;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .view-row .vv.empty {
+    color: #c4c9d2;
+    font-weight: 400;
+  }
+
+  .status-bar {
+    height: 48px;
+    padding: 0 24px 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .status-time {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: .2px;
+  }
+
+  .status-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 26px 28px 34px;
+  }
+
+  .success-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, .28);
+    animation: pop .45s cubic-bezier(.34, 1.56, .64, 1) both;
+  }
+
+  @keyframes pop {
+    from { transform: scale(.5); opacity: 0; }
+    to   { transform: scale(1);  opacity: 1; }
+  }
+
+  .title {
+    margin-top: 20px;
+    font-size: 23px;
+    font-weight: 600;
+    color: #111827;
+    letter-spacing: .5px;
+    animation: fadeUp .45s .06s ease both;
+  }
+
+  .subtitle {
+    margin-top: 8px;
+    font-size: 13px;
+    color: #9ca3af;
+    letter-spacing: .2px;
+    animation: fadeUp .45s .12s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+
+  .amount-block {
+    margin-top: 34px;
+    animation: fadeUp .45s .18s ease both;
+  }
+
+  .amount-label {
+    font-size: 12px;
+    color: #a6adb8;
+    letter-spacing: .5px;
+  }
+
+  .amount {
+    margin-top: 6px;
+    display: flex;
+    align-items: baseline;
+    color: #111827;
+    font-weight: 700;
+    font-size: 36px;
+    letter-spacing: -.5px;
+    line-height: 1.1;
+  }
+
+  .amount .cny {
+    font-size: 19px;
+    font-weight: 600;
+    margin-right: 4px;
+    color: #374151;
+  }
+
+  .info {
+    margin-top: 30px;
+    border-top: 1px solid #f0f2f5;
+    animation: fadeUp .45s .24s ease both;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0f2f5;
+  }
+
+  .row .k {
+    font-size: 14px;
+    color: #6b7280;
+  }
+
+  .row .v {
+    font-size: 14px;
+    font-weight: 500;
+    color: #1f2937;
+    letter-spacing: .3px;
+  }
+
+  .more-info {
+    margin-top: 14px;
+    font-size: 13px;
+    color: #2563eb;
+    letter-spacing: .3px;
+    cursor: pointer;
+    text-align: left;
+    user-select: none;
+  }
+
+  .btn-back {
+    margin-top: auto;
+    width: 100%;
+    height: 50px;
+    border: none;
+    outline: none;
+    border-radius: 12px;
+    background: #2563eb;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .18s ease, transform .12s ease;
+    animation: fadeUp .45s .3s ease both;
+  }
+
+  .btn-back:active {
+    background: #1d4ed8;
+    transform: scale(.985);
+  }
+
+  .home-bar {
+    flex-shrink: 0;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .home-bar span {
+    width: 124px;
+    height: 4px;
+    border-radius: 2px;
+    background: #c2c8d0;
+  }
+
+  /* ---------- 底部保存菜单 ---------- */
+  .sheet-mask {
+    position: absolute;
+    inset: 0;
+    background: rgba(17, 24, 39, .38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s ease;
+    z-index: 10;
+  }
+  .sheet-mask.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    padding: 8px 16px 26px;
+    transform: translateY(100%);
+    transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+    z-index: 11;
+  }
+  .sheet.active {
+    transform: translateY(0);
+  }
+
+  .sheet-title {
+    text-align: center;
+    font-size: 13px;
+    color: #9ca3af;
+    padding: 14px 0 8px;
+    letter-spacing: .3px;
+  }
+
+  .sheet-item {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    color: #2563eb;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s ease;
+  }
+  .sheet-item:active {
+    background: #f3f4f6;
+  }
+  .sheet-item svg { display: block; flex-shrink: 0; }
+
+  .sheet-cancel {
+    margin-top: 8px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #6b7280;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    user-select: none;
+    background: #f7f8fa;
+    transition: background .15s ease;
+  }
+  .sheet-cancel:active {
+    background: #eef1f5;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- ============ 表单页 ============ -->
+  <div class="page page-form">
+    <div class="form-content">
+
+      <div class="form-title-row">
+        <div class="form-title">填写借款信息</div>
+        <a class="btn-donate" href="index.png" aria-label="捐款">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M12 21s-7.5-4.7-9.5-9A5.5 5.5 0 0 1 12 5.5 5.5 5.5 0 0 1 21.5 12c-2 4.3-9.5 9-9.5 9z"
+                  fill="#ef4444"/>
+          </svg>
+          捐款
+        </a>
+      </div>
+      <div class="form-subtitle">完善以下信息，确认后将生成借款成功页面</div>
+
+      <div class="field">
+        <div class="field-label">当前时间（24小时制）</div>
+        <div class="picker-row">
+          <div class="picker-wrap"><div class="picker-col" id="hourPicker"></div></div>
+          <span class="picker-sep">时</span>
+          <div class="picker-wrap"><div class="picker-col" id="minPicker"></div></div>
+          <span class="picker-sep">分</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">贷款金额</div>
+        <div class="input-wrap">
+          <span class="input-prefix">¥</span>
+          <input type="text" id="amountInput" inputmode="decimal"
+                 placeholder="请输入贷款金额" maxlength="10" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">年利率</div>
+        <div class="input-wrap">
+          <input type="text" id="rateInput" inputmode="decimal"
+                 placeholder="请输入年利率" maxlength="8" autocomplete="off">
+          <span class="input-suffix">%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">最晚还款日期</div>
+        <div class="picker-row">
+          <div class="picker-wrap"><div class="picker-col" id="yearPicker"></div></div>
+          <span class="picker-sep">年</span>
+          <div class="picker-wrap"><div class="picker-col" id="monthPicker"></div></div>
+          <span class="picker-sep">月</span>
+          <div class="picker-wrap"><div class="picker-col" id="dayPicker"></div></div>
+          <span class="picker-sep">日</span>
+        </div>
+        <div class="more-link" id="openMoreFromForm">填写更多信息 ›</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-confirm" id="confirmBtn" type="button">确 认</button>
+        <button class="btn-save" id="saveBtn" type="button">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5"
+                  stroke="#ffffff" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 17v1.5A2.5 2.5 0 0 0 6.5 21h11A2.5 2.5 0 0 0 20 18.5V17"
+                  stroke="#ffffff" stroke-width="2.2"
+                  stroke-linecap="round"/>
+          </svg>
+          保存图片
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============ 结果页 ============ -->
+  <div class="page page-result" id="resultPage">
+    <div class="status-bar">
+      <span class="status-time" id="resultTime">13:01</span>
+      <div class="status-icons">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+          <rect x="0"  y="8"   width="3" height="4"  rx="1" fill="#111827"/>
+          <rect x="5"  y="5.5" width="3" height="6.5" rx="1" fill="#111827"/>
+          <rect x="10" y="3"   width="3" height="9"  rx="1" fill="#111827"/>
+          <rect x="15" y="0"   width="3" height="12" rx="1" fill="#111827"/>
+        </svg>
+        <svg width="19" height="13" viewBox="0 0 17 12" fill="none">
+          <circle cx="8.5" cy="9.55" r="1.55" fill="#111827"/>
+          <path d="M5.2 6.85a4.9 4.9 0 016.6 0"
+                stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+          <path d="M2.5 4.25a8.7 8.7 0 0112 0"
+                stroke="#111827" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <svg width="26" height="12" viewBox="0 0 26 12" fill="none">
+          <rect x="0.5" y="0.5" width="22" height="11" rx="3.5"
+                stroke="#111827" stroke-opacity="0.38" stroke-width="1"/>
+          <rect x="2" y="2" width="19" height="8" rx="2.4" fill="#111827"/>
+          <rect x="23.8" y="4" width="1.7" height="4" rx="0.85"
+                fill="#111827" fill-opacity="0.38"/>
+        </svg>
+      </div>
+    </div>
+
+    <main class="content">
+      <div class="success-icon">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12.6L10 17.5L19 7.2"
+                stroke="#ffffff" stroke-width="2.6"
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <h1 class="title">借款成功</h1>
+      <p class="subtitle">款项将尽快到账，请注意查收</p>
+
+      <div class="amount-block">
+        <div class="amount-label">借款金额（元）</div>
+        <div class="amount">
+          <span class="cny">¥</span><span id="resultAmount">50,000.00</span>
+        </div>
+      </div>
+
+      <div class="info">
+        <div class="row">
+          <span class="k">年利率</span>
+          <span class="v" id="resultRate">7.20%</span>
+        </div>
+        <div class="row">
+          <span class="k">最晚还款日期</span>
+          <span class="v" id="resultDate">2030年03月15日</span>
+        </div>
+        <div class="more-info" id="openMoreFromResult">查看更多信息</div>
+      </div>
+
+      <button class="btn-back" type="button" onclick="goBack()">返 回</button>
+    </main>
+
+    <div class="home-bar"><span></span></div>
+  </div>
+
+  <!-- ============ 编辑页（填写更多信息） ============ -->
+  <div class="page page-more" id="morePage">
+    <div class="form-content">
+
+      <div class="form-title-row">
+        <div class="form-title">填写更多信息</div>
+      </div>
+      <div class="form-subtitle">补充以下信息，让借款详情更完整</div>
+
+      <div class="field">
+        <div class="field-label">银行名称</div>
+        <div class="input-wrap">
+          <input type="text" id="bankInput" placeholder="请输入银行名称"
+                 maxlength="30" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">贷款计划</div>
+        <div class="input-wrap">
+          <input type="text" id="planInput" placeholder="例如：等额本息 / 先息后本"
+                 maxlength="30" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">借款用途</div>
+        <div class="input-wrap">
+          <input type="text" id="purposeInput" placeholder="请输入借款用途"
+                 maxlength="30" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">还款方式</div>
+        <div class="input-wrap">
+          <input type="text" id="repayInput" placeholder="请输入还款方式"
+                 maxlength="30" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">贷款编号</div>
+        <div class="input-wrap">
+          <input type="text" id="loanNoInput" placeholder="请输入贷款编号"
+                 maxlength="30" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">贷款日期</div>
+        <div class="input-wrap">
+          <input type="text" id="loanDateInput" placeholder="例如：2030-03-15"
+                 maxlength="20" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">还款起始日期</div>
+        <div class="input-wrap">
+          <input type="text" id="repayStartInput" placeholder="例如：2030-03-15"
+                 maxlength="20" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">还款结束日期</div>
+        <div class="input-wrap">
+          <input type="text" id="repayEndInput" placeholder="例如：2030-03-15"
+                 maxlength="20" autocomplete="off">
+        </div>
+      </div>
+
+    </div>
+
+    <div class="more-footer">
+      <button class="btn-confirm" id="moreSaveBtn" type="button">保 存</button>
+    </div>
+  </div>
+
+  <!-- ============ 查看页（查看更多信息） ============ -->
+  <div class="page page-view" id="viewPage">
+    <div class="form-content">
+
+      <div class="form-title-row">
+        <div class="form-title">借款详情</div>
+      </div>
+      <div class="form-subtitle">以下为本次借款的补充信息</div>
+
+      <div class="view-list">
+        <div class="view-row">
+          <span class="vk">银行名称</span>
+          <span class="vv empty" id="viewBank">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">贷款计划</span>
+          <span class="vv empty" id="viewPlan">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">借款用途</span>
+          <span class="vv empty" id="viewPurpose">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">还款方式</span>
+          <span class="vv empty" id="viewRepay">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">贷款编号</span>
+          <span class="vv empty" id="viewLoanNo">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">贷款日期</span>
+          <span class="vv empty" id="viewLoanDate">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">还款起始日期</span>
+          <span class="vv empty" id="viewRepayStart">未填写</span>
+        </div>
+        <div class="view-row">
+          <span class="vk">还款结束日期</span>
+          <span class="vv empty" id="viewRepayEnd">未填写</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="more-footer">
+      <button class="btn-confirm" id="viewBackBtn" type="button">返 回</button>
+    </div>
+  </div>
+
+  <!-- ============ 底部保存菜单 ============ -->
+  <div class="sheet-mask" id="sheetMask"></div>
+  <div class="sheet" id="saveSheet">
+    <div class="sheet-title">选择要保存的图片</div>
+
+    <div class="sheet-item" id="sheetResult">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M4 6h16M4 6v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6M4 6l2-3h12l2 3"
+              stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 12l2.2 2.2L15.5 10"
+              stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      借款成功图片
+    </div>
+
+    <div class="sheet-item" id="sheetDetails">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M5 4.5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-13a1 1 0 0 1 1-1z"
+              stroke="#2563eb" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M8 9h8M8 13h8M8 17h5"
+              stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      借款详情图片
+    </div>
+
+    <div class="sheet-cancel" id="sheetCancel">取消</div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const ITEM_H = 40;
+  const VISIBLE_H = 160;
+  const PAD_H = (VISIBLE_H - ITEM_H) / 2;
+
+  function createPicker(container, items, defaultIndex, onChange) {
+    container.innerHTML = '';
+
+    const topPad = document.createElement('div');
+    topPad.style.cssText = 'height:' + PAD_H + 'px;flex-shrink:0;';
+    container.appendChild(topPad);
+
+    items.forEach(function(text) {
+      const el = document.createElement('div');
+      el.className = 'picker-item';
+      el.textContent = text;
+      container.appendChild(el);
+    });
+
+    const botPad = document.createElement('div');
+    botPad.style.cssText = 'height:' + PAD_H + 'px;flex-shrink:0;';
+    container.appendChild(botPad);
+
+    function getIndex() {
+      const raw = Math.round(container.scrollTop / ITEM_H);
+      return Math.max(0, Math.min(items.length - 1, raw));
+    }
+
+    let currentIndex = defaultIndex;
+    let scrollTimer = null;
+    let isSnapping = false;
+
+    function paint() {
+      const idx = getIndex();
+      const list = container.querySelectorAll('.picker-item');
+      for (let i = 0; i < list.length; i++) {
+        list[i].classList.toggle('active', i === idx);
+      }
+    }
+
+    container.addEventListener('scroll', function() {
+      paint();
+
+      if (isSnapping) return;
+
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(function() {
+        const idx = getIndex();
+
+        if (idx !== currentIndex) {
+          currentIndex = idx;
+          if (typeof onChange === 'function') onChange(items[idx], idx);
+        }
+
+        const target = idx * ITEM_H;
+        if (Math.abs(container.scrollTop - target) > 0.5) {
+          isSnapping = true;
+          container.scrollTo({ top: target, behavior: 'smooth' });
+          setTimeout(function() { isSnapping = false; }, 420);
+        }
+      }, 80);
+    });
+
+    requestAnimationFrame(function() {
+      container.scrollTop = defaultIndex * ITEM_H;
+      currentIndex = getIndex();
+      paint();
+      if (typeof onChange === 'function') onChange(items[currentIndex], currentIndex);
+    });
+
+    return {
+      get value() { return items[getIndex()]; },
+      get index() { return getIndex(); }
+    };
+  }
+
+  const now = new Date();
+
+  const hours = [];
+  for (let i = 0; i < 24; i++) hours.push(String(i).padStart(2, '0'));
+
+  const minutes = [];
+  for (let i = 0; i < 60; i++) minutes.push(String(i).padStart(2, '0'));
+
+  const years = [];
+  const thisYear = now.getFullYear();
+  for (let i = thisYear; i <= thisYear + 25; i++) years.push(String(i));
+
+  const months = [];
+  for (let i = 1; i <= 12; i++) months.push(String(i).padStart(2, '0'));
+
+  const days = [];
+  for (let i = 1; i <= 31; i++) days.push(String(i).padStart(2, '0'));
+
+  const hourPicker  = createPicker(document.getElementById('hourPicker'),  hours,   now.getHours());
+  const minPicker   = createPicker(document.getElementById('minPicker'),   minutes, now.getMinutes());
+  const yearPicker  = createPicker(document.getElementById('yearPicker'),  years,   0);
+  const monthPicker = createPicker(document.getElementById('monthPicker'), months,  now.getMonth());
+  const dayPicker   = createPicker(document.getElementById('dayPicker'),   days,    now.getDate() - 1);
+
+  const amountInput = document.getElementById('amountInput');
+  const rateInput   = document.getElementById('rateInput');
+
+  function sanitizeDecimal(input, maxLen) {
+    let v = input.value.replace(/[^\d.]/g, '');
+    const firstDot = v.indexOf('.');
+    if (firstDot !== -1) {
+      v = v.slice(0, firstDot + 1) + v.slice(firstDot + 1).replace(/\./g, '');
+    }
+    if (maxLen && v.length > maxLen) v = v.slice(0, maxLen);
+    input.value = v;
+  }
+
+  amountInput.addEventListener('input', function() { sanitizeDecimal(amountInput, 10); });
+  rateInput.addEventListener('input',   function() { sanitizeDecimal(rateInput, 8); });
+
+  function formatAmount(v) {
+    if (!v) return '0.00';
+    const parts = v.split('.');
+    let intPart = parts[0] || '0';
+    let decPart = parts[1];
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    if (decPart === undefined || decPart.length === 0) decPart = '00';
+    else if (decPart.length === 1) decPart += '0';
+    else decPart = decPart.slice(0, 2);
+    return intPart + '.' + decPart;
+  }
+
+  function formatRate(v) {
+    if (!v) return '0.00%';
+    const parts = v.split('.');
+    let intPart = parts[0] || '0';
+    let decPart = parts[1];
+    if (decPart === undefined || decPart.length === 0) decPart = '00';
+    else if (decPart.length === 1) decPart += '0';
+    else decPart = decPart.slice(0, 2);
+    return intPart + '.' + decPart + '%';
+  }
+
+  function syncResultFromForm() {
+    const timeStr   = hourPicker.value + ':' + minPicker.value;
+    const amountStr = formatAmount(amountInput.value);
+    const rateStr   = formatRate(rateInput.value);
+    const dateStr   = yearPicker.value + '年' + monthPicker.value + '月' + dayPicker.value + '日';
+
+    document.getElementById('resultTime').textContent   = timeStr;
+    document.getElementById('resultAmount').textContent = amountStr;
+    document.getElementById('resultRate').textContent   = rateStr;
+    document.getElementById('resultDate').textContent   = dateStr;
+
+    return { timeStr, amountStr, rateStr, dateStr };
+  }
+
+  document.getElementById('confirmBtn').addEventListener('click', function() {
+    syncResultFromForm();
+
+    document.querySelector('.page-form').classList.add('hidden');
+    document.querySelector('.page-result').classList.add('active');
+  });
+
+  window.goBack = function() {
+    document.querySelector('.page-form').classList.remove('hidden');
+    document.querySelector('.page-result').classList.remove('active');
+  };
+
+  function openMoreEditor() {
+    document.getElementById('morePage').classList.add('active');
+  }
+  function closeMoreEditor() {
+    document.getElementById('morePage').classList.remove('active');
+  }
+
+  function openMoreViewer() {
+    const fields = [
+      ['bankInput',      'viewBank'],
+      ['planInput',      'viewPlan'],
+      ['purposeInput',   'viewPurpose'],
+      ['repayInput',     'viewRepay'],
+      ['loanNoInput',    'viewLoanNo'],
+      ['loanDateInput',  'viewLoanDate'],
+      ['repayStartInput','viewRepayStart'],
+      ['repayEndInput',  'viewRepayEnd']
+    ];
+
+    fields.forEach(function(pair) {
+      const val = document.getElementById(pair[0]).value.trim();
+      const el  = document.getElementById(pair[1]);
+      if (val) {
+        el.textContent = val;
+        el.classList.remove('empty');
+      } else {
+        el.textContent = '未填写';
+        el.classList.add('empty');
+      }
+    });
+
+    document.getElementById('viewPage').classList.add('active');
+  }
+  function closeMoreViewer() {
+    document.getElementById('viewPage').classList.remove('active');
+  }
+
+  document.getElementById('openMoreFromForm').addEventListener('click', openMoreEditor);
+  document.getElementById('openMoreFromResult').addEventListener('click', openMoreViewer);
+  document.getElementById('moreSaveBtn').addEventListener('click', closeMoreEditor);
+  document.getElementById('viewBackBtn').addEventListener('click', closeMoreViewer);
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawStatusBar(ctx, FONT, timeStr) {
+    ctx.fillStyle = '#111827';
+    ctx.font = '700 15px ' + FONT;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText(timeStr, 30, 24);
+
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(276, 26, 3, 4);
+    ctx.fillRect(281, 23.5, 3, 6.5);
+    ctx.fillRect(286, 21, 3, 9);
+    ctx.fillRect(291, 18, 3, 12);
+
+    ctx.save();
+    ctx.translate(300, 17.5);
+    ctx.scale(19 / 17, 13 / 12);
+    ctx.fillStyle = '#111827';
+    ctx.beginPath();
+    ctx.arc(8.5, 9.55, 1.55, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 1.9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.arc(8.5, 10.47, 4.9, Math.PI * 1.25, Math.PI * 1.75);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(8.5, 10.55, 8.7, Math.PI * 1.25, Math.PI * 1.75);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.strokeStyle = 'rgba(17,24,39,0.38)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, 325.5, 18.5, 22, 11, 3.5);
+    ctx.stroke();
+    ctx.fillStyle = '#111827';
+    roundRect(ctx, 327, 20, 19, 8, 2.4);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(17,24,39,0.38)';
+    roundRect(ctx, 348.8, 22, 1.7, 4, 0.85);
+    ctx.fill();
+  }
+
+  function drawHomeBar(ctx) {
+    ctx.fillStyle = '#c2c8d0';
+    roundRect(ctx, 125.5, 765, 124, 4, 2);
+    ctx.fill();
+  }
+
+  const FONT = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", Arial, sans-serif';
+  const scale = 2;
+  const W = 375, H = 780;
+
+  function drawResultCanvas(vals, callback) {
+    const canvas = document.createElement('canvas');
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    drawStatusBar(ctx, FONT, vals.timeStr);
+
+    ctx.beginPath();
+    ctx.arc(59, 105, 31, 0, Math.PI * 2);
+    ctx.fillStyle = '#2563eb';
+    ctx.fill();
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(50.25, 105.75);
+    ctx.lineTo(56.5, 111.875);
+    ctx.lineTo(67.75, 99);
+    ctx.stroke();
+
+    ctx.fillStyle = '#111827';
+    ctx.font = '600 23px ' + FONT;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText('借款成功', 28, 158);
+
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '400 13px ' + FONT;
+    ctx.fillText('款项将尽快到账，请注意查收', 28, 193);
+
+    ctx.fillStyle = '#a6adb8';
+    ctx.font = '400 12px ' + FONT;
+    ctx.textBaseline = 'middle';
+    ctx.fillText('借款金额（元）', 28, 246);
+
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#374151';
+    ctx.font = '600 19px ' + FONT;
+    ctx.fillText('¥', 28, 290);
+
+    ctx.fillStyle = '#111827';
+    ctx.font = '700 36px ' + FONT;
+    ctx.fillText(vals.amountStr, 45, 290);
+
+    ctx.strokeStyle = '#f0f2f5';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(28, 331);
+    ctx.lineTo(347, 331);
+    ctx.stroke();
+
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '400 14px ' + FONT;
+    ctx.fillText('年利率', 28, 356);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#1f2937';
+    ctx.font = '500 14px ' + FONT;
+    ctx.fillText(vals.rateStr, 347, 356);
+
+    ctx.strokeStyle = '#f0f2f5';
+    ctx.beginPath();
+    ctx.moveTo(28, 381);
+    ctx.lineTo(347, 381);
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '400 14px ' + FONT;
+    ctx.fillText('最晚还款日期', 28, 406);
+
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#1f2937';
+    ctx.font = '500 14px ' + FONT;
+    ctx.fillText(vals.dateStr, 347, 406);
+
+    ctx.strokeStyle = '#f0f2f5';
+    ctx.beginPath();
+    ctx.moveTo(28, 431);
+    ctx.lineTo(347, 431);
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#2563eb';
+    ctx.font = '400 13px ' + FONT;
+    ctx.fillText('查看更多信息', 28, 455);
+
+    drawHomeBar(ctx);
+
+    canvas.toBlob(function(blob) {
+      callback(blob, canvas);
+    }, 'image/png');
+  }
+
+  function drawDetailsCanvas(vals, callback) {
+    const canvas = document.createElement('canvas');
+    canvas.width = W * scale;
+    canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    drawStatusBar(ctx, FONT, vals.timeStr);
+
+    ctx.fillStyle = '#111827';
+    ctx.font = '600 23px ' + FONT;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText('借款详情', 28, 90);
+
+    ctx.fillStyle = '#9ca3af';
+    ctx.font = '400 13px ' + FONT;
+    ctx.fillText('以下为本次借款的补充信息', 28, 122);
+
+    const rows = [
+      ['银行名称',     document.getElementById('bankInput').value.trim()],
+      ['贷款计划',     document.getElementById('planInput').value.trim()],
+      ['借款用途',     document.getElementById('purposeInput').value.trim()],
+      ['还款方式',     document.getElementById('repayInput').value.trim()],
+      ['贷款编号',     document.getElementById('loanNoInput').value.trim()],
+      ['贷款日期',     document.getElementById('loanDateInput').value.trim()],
+      ['还款起始日期', document.getElementById('repayStartInput').value.trim()],
+      ['还款结束日期', document.getElementById('repayEndInput').value.trim()]
+    ];
+
+    const startY = 158;
+    const rowH = 60;
+
+    ctx.strokeStyle = '#f0f2f5';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(28, startY);
+    ctx.lineTo(347, startY);
+    ctx.stroke();
+
+    ctx.textBaseline = 'middle';
+    rows.forEach(function(row, i) {
+      const centerY = startY + rowH * i + rowH / 2;
+      const lineY   = startY + rowH * (i + 1);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#6b7280';
+      ctx.font = '400 14px ' + FONT;
+      ctx.fillText(row[0], 28, centerY);
+
+      ctx.textAlign = 'right';
+      const raw = row[1];
+      if (raw) {
+        let fontSize = 14;
+        ctx.font = '500 ' + fontSize + 'px ' + FONT;
+        while (ctx.measureText(raw).width > 210 && fontSize > 11) {
+          fontSize--;
+          ctx.font = '500 ' + fontSize + 'px ' + FONT;
+        }
+        ctx.fillStyle = '#1f2937';
+        ctx.fillText(raw, 347, centerY);
+      } else {
+        ctx.fillStyle = '#c4c9d2';
+        ctx.font = '400 14px ' + FONT;
+        ctx.fillText('未填写', 347, centerY);
+      }
+
+      ctx.strokeStyle = '#f0f2f5';
+      ctx.beginPath();
+      ctx.moveTo(28, lineY);
+      ctx.lineTo(347, lineY);
+      ctx.stroke();
+    });
+
+    drawHomeBar(ctx);
+
+    canvas.toBlob(function(blob) {
+      callback(blob, canvas);
+    }, 'image/png');
+  }
+
+  function triggerDownload(blob, canvas, filename) {
+    if (!blob) {
+      const dataURL = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return;
+    }
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+
+    const evt = new MouseEvent('click', {
+      view: window,
+      bubbles: true,
+      cancelable: true
+    });
+    a.dispatchEvent(evt);
+
+    setTimeout(function() {
+      if (a.parentNode) document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 2000);
+  }
+
+  // ---------- 底部菜单开关 ----------
+  const sheet       = document.getElementById('saveSheet');
+  const sheetMask   = document.getElementById('sheetMask');
+
+  function openSheet() {
+    sheet.classList.add('active');
+    sheetMask.classList.add('active');
+  }
+  function closeSheet() {
+    sheet.classList.remove('active');
+    sheetMask.classList.remove('active');
+  }
+
+  sheetMask.addEventListener('click', closeSheet);
+  document.getElementById('sheetCancel').addEventListener('click', closeSheet);
+
+  // ---------- 点保存：弹菜单 ----------
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    // 先同步一次表单值到结果页
+    syncResultFromForm();
+    openSheet();
+  });
+
+  // 保存「借款成功」图
+  document.getElementById('sheetResult').addEventListener('click', function() {
+    const vals = syncResultFromForm();
+    closeSheet();
+    drawResultCanvas(vals, function(blob, canvas) {
+      triggerDownload(blob, canvas, 'loan-success.png');
+    });
+  });
+
+  // 保存「借款详情」图
+  document.getElementById('sheetDetails').addEventListener('click', function() {
+    const vals = syncResultFromForm();
+    closeSheet();
+    drawDetailsCanvas(vals, function(blob, canvas) {
+      triggerDownload(blob, canvas, 'loan-details.png');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
